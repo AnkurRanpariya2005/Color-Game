@@ -1,4 +1,4 @@
-package com.color.model;
+package com.color.entity;
 
 
 import jakarta.persistence.*;

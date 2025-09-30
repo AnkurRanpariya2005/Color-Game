@@ -1,14 +1,15 @@
-package com.color.model;
+package com.color.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
 
+import com.color.dto.BetStatus;
+import com.color.dto.Color;
+
 @Entity
 @Table(name = "bets")
-@Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
