@@ -1,13 +1,9 @@
 package com.color.repository;
 
+import com.color.entity.Event;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import com.color.entity.User;
-
-
 @Repository
-public interface UserRepository extends JpaRepository<User, Long> {
-    
-    public User findByEmail(String email);
+public interface EventRepository extends JpaRepository<Event,Long> {
 }

@@ -39,18 +39,21 @@ public class AppConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
 
-       return http.csrf(customizer -> customizer.disable())
-                    .authorizeHttpRequests(request -> request
-                                                    .requestMatchers("login", "register").permitAll()
-                                                    .anyRequest().authenticated()
-                                            )
-                    .httpBasic(Customizer.withDefaults())
-                    .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                    .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-                    .cors(customizer-> customizer.configurationSource(corsConfigurationSource()))
-                    .build();
+        return http.csrf(customizer -> customizer.disable())
+                .authorizeHttpRequests(request -> request
+                        .requestMatchers("/api/auth/**","/api/**", "/swagger-ui/**","/v3/api-docs/**","/ws/**","/socket.io/**","/api/home/**").permitAll()
+                        .requestMatchers("/api/home/**","/api/user/venues").permitAll()
+                        .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
+                        .requestMatchers("/api/owner/**").hasAuthority("OWNER")
+                        .requestMatchers("/api/user/**","/api/user/venues/**").hasAuthority("USER")
+                        .anyRequest().authenticated()
+                )
+                .httpBasic(Customizer.withDefaults())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                .cors(customizer-> customizer.configurationSource(corsConfigurationSource()))
+                .build();
     }
-
 
     private CorsConfigurationSource corsConfigurationSource() {
         
@@ -59,7 +62,7 @@ public class AppConfig {
             @Override
             public CorsConfiguration getCorsConfiguration(HttpServletRequest arg) {
                 CorsConfiguration cfg = new CorsConfiguration();    
-                cfg.setAllowedOrigins(Arrays.asList("http://localhost:3000/"));
+                cfg.setAllowedOrigins(Arrays.asList("http://localhost:5173/"));
                 cfg.setAllowedMethods(Collections.singletonList("*"));
                 cfg.setAllowedHeaders(Collections.singletonList("*"));
                 cfg.setAllowCredentials(true);

@@ -13,6 +13,7 @@ import com.color.dto.EventStatus;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Data
 public class Event {
 
     @Id
