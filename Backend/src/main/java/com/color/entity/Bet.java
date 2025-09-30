@@ -1,7 +1,10 @@
-package com.color.model;
+package com.color.entity;
 
+import com.color.dto.BetStatus;
+import com.color.dto.Color;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -41,4 +44,8 @@ public class Bet {
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "updated_at", updatable = false)
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 }
