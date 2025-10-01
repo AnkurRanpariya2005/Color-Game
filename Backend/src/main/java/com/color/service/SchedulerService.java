@@ -28,17 +28,13 @@ public class SchedulerService {
 
     private Event currentEvent;
 
-    private final WebSocketContoller webSocketContoller;
 
-    @MessageMapping("/app/join")
-    @SendTo("/topic/players")  // All clients subscribed here will get update
-    public Event handleNewPlayer(String username) {
-        log.info("New player joined########################: " + username);
+
+
+
+    public Event sendEvent(){
         return currentEvent;
-        // simpMessagingTemplate.convertAndSend("/topic/players", currentEvent);
     }
-
-    
     /**
      * 
      * Runs every 70 seconds

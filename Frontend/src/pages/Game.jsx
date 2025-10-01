@@ -74,7 +74,7 @@ export default function Game() {
 
 
   // server event & timers
-  const [currentEvent, setCurrentEvent] = useState(null)
+  const [currentEvent, setCurrentEvent] = useState()
   const [remainingTime, setRemainingTime] = useState(0)
   const [progressPercent, setProgressPercent] = useState(0)
 
@@ -128,13 +128,16 @@ export default function Game() {
           const status = JSON.parse(message.body)
           const result = "RED"
           console.log("📩 Status received:", status)
-
-    
+          
+            
+         
+          console.log(status,"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+          console.log(currentEvent)
           // lock/unlock bets based on backend status
           setBetsLocked(status.status !== "BETTING")
 
           // if backend already provided the result, resolve here
-          if (status.status === "RESULT" && result) {
+          if (status.status === "RESULT_WAIT" && result) {
             if (lastResolvedRoundRef.current !== status.eventId) {
               resolveRound(status.eventId, result)
               // resolveRound will set lastResolvedRoundRef after success
@@ -148,13 +151,12 @@ export default function Game() {
           console.error("Failed parse event:", err)
         }
       })
-      client.send("/app/join", {}, "guest");
       
     
     if(!currentEvent)
     {
       console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAaaaaa");
-      client.send("/app/join", {}, "guest");
+      client.send("/app/join", {});
       client.subscribe(`/topic/players`, (message) => {
         try {
           console.log("BBBBBBBBBBBBBBBBBBBBBBBB")
@@ -194,7 +196,7 @@ export default function Game() {
     }
     // only run once
   }, [])
-  console.log("###############################################33Current event:", currentEvent);
+
 
   // Persist history
   useEffect(() => {
