@@ -26,7 +26,7 @@ public class SchedulerService {
     /**
      * Runs every 70 seconds
      */
-    @Scheduled(fixedRate = 1000)
+    @Scheduled(fixedRate = 70000)
     public void scheduleEvent() {
         // End previous event if exists
         if (currentEvent != null) {
@@ -67,14 +67,18 @@ public class SchedulerService {
         // Betting phase
         if (now.isBefore(currentEvent.getEndAt())) {
             currentEvent.setStatus(EventStatus.BETTING);
+            simpMessagingTemplate.convertAndSend("/topic/events", currentEvent);
         }
         // Result wait phase (10 sec after betting ends)
         else if (now.isBefore(currentEvent.getEndAt().plusSeconds(10))) {
+
             currentEvent.setStatus(EventStatus.RESULT_WAIT);
+            simpMessagingTemplate.convertAndSend("/topic/events", currentEvent);
         }
         // Completed (before next event spawns)
         else {
             currentEvent.setStatus(EventStatus.COMPLETED);
+            simpMessagingTemplate.convertAndSend("/topic/events", currentEvent);
         }
 
         eventRepository.save(currentEvent);

@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 
 import com.color.dto.Color;
 import com.color.dto.EventStatus;
+import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
 @Table(name = "events")
@@ -43,5 +44,6 @@ public class Event {
     private Color result;  // RED, GREEN, BLUE
 
     @Column(name = "created_at", updatable = false)
+    @CreationTimestamp
     private LocalDateTime createdAt = LocalDateTime.now();
 }
