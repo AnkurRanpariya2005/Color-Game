@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 
@@ -6,16 +6,30 @@ export default function Login() {
   const { login } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+
+  useEffect(() => {
+    const saved = localStorage.getItem('cg_last_email')
+    if (saved) setEmail(saved)
+  }, [])
 
   const onSubmit = async (e) => {
     e.preventDefault()
     setError('')
     setLoading(true)
     try {
-      await login(email.trim(), password)
+      const emailTrimmed = email.trim().toLowerCase()
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrimmed)) {
+        throw new Error('Please enter a valid email address')
+      }
+      if (password.length < 6) {
+        throw new Error('Password must be at least 6 characters')
+      }
+      await login(emailTrimmed, password)
+      localStorage.setItem('cg_last_email', emailTrimmed)
       navigate('/')
     } catch (err) {
       setError(err.message || 'Login failed')
@@ -36,7 +50,24 @@ export default function Login() {
           </div>
           <div className="col">
             <label>Password</label>
-            <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" required />
+            <div className="row" style={{ gap: 8 }}>
+              <input
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                type={showPassword ? 'text' : 'password'}
+                required
+                style={{ flex: 1 }}
+              />
+              <button
+                type="button"
+                className="icon-btn"
+                onClick={() => setShowPassword((s) => !s)}
+                title={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? '🙈' : '👁️'}
+              </button>
+            </div>
+            <div style={{ color: 'var(--muted)', fontSize: 12 }}>Min 6 characters</div>
           </div>
           <div className="auth-actions">
             <button className="btn" type="submit" disabled={loading}>{loading ? 'Loading...' : 'Login'}</button>

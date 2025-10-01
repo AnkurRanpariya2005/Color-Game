@@ -1,23 +1,60 @@
+/* Added theme variables for both dark and light modes */
 :root {
-  --bg: #0f1220;
-  --panel: #151a2d;
-  --accent: #6c7cff;
-  --text: #e7ecff;
-  --muted: #98a0c8;
-  --success: #39d98a;
-  --danger: #ff5c7a;
-  --info: #4dd0e1;
+  --bg: #0a0e1a;
+  --panel: #141824;
+  --accent: #10b981;
+  --text: #f0f4f8;
+  --muted: #94a3b8;
+  --success: #10b981;
+  --danger: #ef4444;
+  --info: #3b82f6;
+  --border: rgba(255, 255, 255, 0.08);
 }
 
-* { box-sizing: border-box; }
+/* Light theme variables */
+[data-theme="light"] {
+  --bg: #f8fafc;
+  --panel: #ffffff;
+  --accent: #10b981;
+  --text: #0f172a;
+  --muted: #64748b;
+  --success: #10b981;
+  --danger: #ef4444;
+  --info: #3b82f6;
+  --border: rgba(0, 0, 0, 0.08);
+}
 
-html, body, #root { height: 100%; }
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  /* Added transition for smooth theme switching */
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
 body {
   margin: 0;
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
-    Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-  background: linear-gradient(180deg, #0f1220 0%, #0b0e1a 100%);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans",
+    "Droid Sans", "Helvetica Neue", sans-serif;
+  /* Updated background to use CSS variables */
+  background: var(--bg);
   color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Light mode gradient background */
+[data-theme="light"] body {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+/* Dark mode gradient background */
+[data-theme="dark"] body {
+  background: linear-gradient(135deg, #0a0e1a 0%, #1a1f2e 100%);
 }
 
 .app-container {
@@ -29,102 +66,122 @@ body {
 .app-main {
   flex: 1;
   width: 100%;
-  max-width: 1100px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 24px 16px 48px;
+  padding: 20px 16px 48px;
 }
 
 .card {
   background: var(--panel);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 24px;
+  /* Updated shadow for theme support */
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .card {
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
 }
 
 .btn {
   appearance: none;
   border: none;
-  border-radius: 12px;
-  padding: 12px 16px;
-  font-weight: 700;
-  color: #0f1220;
+  border-radius: 14px;
+  padding: 14px 20px;
+  font-weight: 600;
+  font-size: 15px;
+  color: #fff;
   background: var(--accent);
   cursor: pointer;
-  transition: transform .06s ease, filter .15s ease, opacity .2s ease;
+  transition: all 0.2s ease;
+  min-height: 48px;
 }
-.btn:active { transform: translateY(1px) scale(.99); }
-.btn:disabled { opacity: .5; cursor: not-allowed; }
-
-.row { display: flex; gap: 12px; align-items: center; }
-.col { display: flex; flex-direction: column; gap: 12px; }
-
-.center { display:flex; align-items:center; justify-content:center; }
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+.btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
-body {
-  margin: 0;
+.row {
   display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
+/* Header controls */
+.icon-btn {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  border-radius: 12px;
+  padding: 10px 12px;
+  min-width: 44px;
+  min-height: 44px;
   cursor: pointer;
-  transition: border-color 0.25s;
+  transition: all 0.2s ease;
 }
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+.icon-btn:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
+.wallet-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.wallet-btn:hover {
+  border-color: var(--accent);
+}
+.wallet-icon {
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+}
+.wallet-amount {
+  font-weight: 800;
+}
+
+.center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Improved mobile responsiveness */
+@media (max-width: 768px) {
+  .app-main {
+    padding: 16px 12px 32px;
   }
-  a:hover {
-    color: #747bff;
+
+  .card {
+    padding: 20px 16px;
+    border-radius: 16px;
   }
-  button {
-    background-color: #f9f9f9;
+
+  .btn {
+    padding: 12px 16px;
+    font-size: 14px;
+    min-height: 44px;
   }
 }
