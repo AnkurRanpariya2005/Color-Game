@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class BetRequest {
 
-    private Long userId;
+    private String userId;
     private Long eventId;
     private Color color;
     private Long amount;

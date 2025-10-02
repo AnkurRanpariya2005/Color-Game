@@ -91,6 +91,8 @@ public class SchedulerService {
         StatusDto statusDto = new StatusDto();
         statusDto.setEventId(currentEvent.getId());
         statusDto.setStatus(currentEvent.getStatus().name());
+        statusDto.setResult(currentEvent.getResult());
+
 
         // Betting phase
         if (now.isBefore(currentEvent.getEndAt())) {
@@ -99,6 +101,7 @@ public class SchedulerService {
         }
         // Result wait phase (10 sec after betting ends)
         else if (now.isBefore(currentEvent.getEndAt().plusSeconds(10))) {
+
             resolveEvent(statusDto, currentEvent);
             currentEvent.setStatus(EventStatus.RESULT_WAIT);
             simpMessagingTemplate.convertAndSend("/topic/status", statusDto);
@@ -113,12 +116,14 @@ public class SchedulerService {
 
     // Calculate result
     private void resolveEvent(StatusDto statusDto, Event event) {
-        if (statusDto.getResult() != null) return;
+        if (event.getResult() != null) return;
 
         Color winningColor = pickRandomColor(event);
 
         statusDto.setResult(winningColor);
-;        BigDecimal multiplier = BigDecimal.valueOf(1.8);
+        BigDecimal multiplier = BigDecimal.valueOf(1.8);
+        event.setResult(winningColor);
+        eventRepository.save(event);
 
 
         List<Bet> bets = betRepository.findByEvent(event);
@@ -129,11 +134,12 @@ public class SchedulerService {
                 b.setStatus(BetStatus.WON);
                 b.setPayout(payoutBD.longValue());
                 user.setBalance(user.getBalance()+payoutBD.longValue());
+                userRepository.save(user);
             } else {
                 b.setStatus(BetStatus.LOST);
                 b.setPayout(0L);
             }
-            userRepository.save(user);
+
             betRepository.save(b);
         }
 

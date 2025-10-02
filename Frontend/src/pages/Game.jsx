@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { use, useEffect, useRef, useState } from "react"
 
 import SockJS from "sockjs-client"
 import { Stomp } from "@stomp/stompjs"
@@ -8,6 +8,7 @@ import { Stomp } from "@stomp/stompjs"
 import { useSelector } from "react-redux"
 import { eventAction } from "../store/Event/event"
 import { useDispatch } from "react-redux"
+import { userAction } from "../store/Event/user"
 const HISTORY_KEY = "cg_history_v1"
 
 const COLORS = [
@@ -61,7 +62,7 @@ function parseServerTimeToMs(isoString) {
 }
 
 export default function Game() {
-  const {user}=useSelector((state)=>state.user);
+  const user=useSelector((state)=>state.user);
   
   const dispatch = useDispatch()
   const curre = useSelector((state) => state.event.Event)
@@ -115,7 +116,7 @@ export default function Game() {
       client.subscribe(`/topic/events`, (message) => {
         try {
           const event = JSON.parse(message.body)
-          console.log("📩 Event received:", event)
+          // console.log("📩 Event received:", event)
           dispatch(eventAction.clearEvent());
           dispatch(eventAction.StorageEvent(event))
           // set latest event (UI/timer will follow this)
@@ -134,7 +135,7 @@ export default function Game() {
       client.subscribe(`/topic/status`, (message) => {
         try {
           const status = JSON.parse(message.body)
-          console.log(result,"#############################")
+          // console.log(result,"#############################")
           console.log("📩 Status received:", status)
           
             
@@ -147,6 +148,7 @@ export default function Game() {
           // if backend already provided the result, resolve here
           if (status.status === "RESULT_WAIT" && status.result ) {
             if (lastResolvedRoundRef.current !== status.eventId) {
+              console.log("/////////////////////////////"+status.result)
               setResult(status.result);
               resolveRound(status.eventId,  result)
               // resolveRound will set lastResolvedRoundRef after success
@@ -168,7 +170,7 @@ export default function Game() {
       client.subscribe(`/topic/players`, (message) => {
         try {
           const event = JSON.parse(message.body)
-          console.log("📩 Event received:", event)
+          // console.log("📩 Event received:", event)
 
           // set latest event (UI/timer will follow this)
           dispatch(eventAction.StorageEvent(event))
@@ -320,7 +322,7 @@ export default function Game() {
   function resolveRound(roundId, winningColor) {
     if (!winningColor) return
 
-    console.log(winningColor,"*******************************************************************")
+    // console.log(winningColor,"*******************************************************************")
     // avoid double-resolve
     if (lastResolvedRoundRef.current === roundId) return
 
@@ -368,13 +370,15 @@ export default function Game() {
 // added later by ankur
   const placeBet = (color) => setSelected(color)
   const confirmBet = () => {
-    console.log("Confirm bet clicked, hahahahhahahahahahhahah");
+    // console.log("Confirm bet clicked, hahahahhahahahahahhahah");
     const client = stompRef.current
     if (!selected || !currentEvent) return
+
+    dispatch(userAction.updateBalance(user.balance - betAmount));
     client.send(
       "/app/bet",
       {},
-      JSON.stringify({ userId: 1, eventId: currentEvent.id, color: selected, amount: betAmount })
+      JSON.stringify({ userId: user?.email, eventId: currentEvent.id, color: selected, amount: betAmount })
     )
     setSelected(null)
   }

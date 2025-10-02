@@ -42,7 +42,9 @@ public class BetController {
             return;
         }
 
-        User user = userRepository.findById(request.getUserId()).orElseThrow();
+
+
+        User user = userRepository.findByEmail(request.getUserId());
         user.setBalance(user.getBalance()-request.getAmount());
         Bet bet = Bet.builder()
                 .event(currentEvent)
