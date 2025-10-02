@@ -5,6 +5,9 @@ import { useAuth } from "../context/AuthContext.jsx"
 import SockJS from "sockjs-client"
 import { Stomp } from "@stomp/stompjs"
 
+import { useSelector } from "react-redux"
+import { eventAction } from "../store/Event/event"
+import { useDispatch } from "react-redux"
 const HISTORY_KEY = "cg_history_v1"
 
 const COLORS = [
@@ -59,7 +62,9 @@ function parseServerTimeToMs(isoString) {
 
 export default function Game() {
   const { user, balance, setBalance, updateProfile, addBetToHistory, betHistory } = useAuth()
-
+  const dispatch = useDispatch()
+  const curre = useSelector((state) => state.event.Event)
+  console.log(curre,"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAaaaaa")
   // UI / game state
   const [selected, setSelected] = useState(null)
   const [betsLocked, setBetsLocked] = useState(true)
@@ -90,6 +95,12 @@ export default function Game() {
   const lastResolvedRoundRef = useRef(null)
   const intervalRef = useRef(null)
 
+  useEffect(() => {
+    if (curre) {
+      setCurrentEvent(curre)
+    }
+  }, [curre])
+
   // --- WebSocket subscription / incoming events ---
   useEffect(() => {
     const socket = new SockJS(`http://localhost:8080/ws`)
@@ -101,9 +112,11 @@ export default function Game() {
         try {
           const event = JSON.parse(message.body)
           console.log("📩 Event received:", event)
-
+          dispatch(eventAction.clearEvent());
+          dispatch(eventAction.StorageEvent(event))
           // set latest event (UI/timer will follow this)
           setCurrentEvent(event)
+          
           setStartTimer(event.startAt);
           // lock/unlock bets based on backend status
           setBetsLocked(event.status !== "BETTING")
@@ -130,10 +143,10 @@ export default function Game() {
           console.log("📩 Status received:", status)
           
             
-         
-          console.log(status,"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
-          console.log(currentEvent)
+        
+          dispatch(eventAction.setStatus(status.status));
           // lock/unlock bets based on backend status
+          
           setBetsLocked(status.status !== "BETTING")
 
           // if backend already provided the result, resolve here
@@ -164,6 +177,7 @@ export default function Game() {
           console.log("📩 Event received:", event)
 
           // set latest event (UI/timer will follow this)
+          dispatch(eventAction.StorageEvent(event))
           setCurrentEvent(event)
           setStartTimer(event.startAt);
           // lock/unlock bets based on backend status

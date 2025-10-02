@@ -1,12 +1,15 @@
 import { configureStore, combineReducers } from '@reduxjs/toolkit'
 
 import {persistReducer, persistStore} from 'redux-persist'
-import storage from 'redux-persist/li+b/storage'
-import { authReducer } from './Auth/auth.reducer';
+import storage from 'redux-persist/lib/storage'
+
+import eventSlice from './Event/event';
+import userSlice from './Event/user';
 
 
 const rootReducer = combineReducers({
-  auth: authReducer,
+  event: eventSlice.reducer,
+  user: userSlice.reducer,
 
 })
 
