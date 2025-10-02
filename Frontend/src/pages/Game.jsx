@@ -65,7 +65,7 @@ export default function Game() {
   
   const dispatch = useDispatch()
   const curre = useSelector((state) => state.event.Event)
-  console.log(curre,"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAaaaaa")
+  // console.log(curre,"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAaaaaa")
   // UI / game state
   const [selected, setSelected] = useState(null)
   const [betsLocked, setBetsLocked] = useState(true)
@@ -75,6 +75,7 @@ export default function Game() {
   const [showConfetti, setShowConfetti] = useState(false)
   const [lastWin, setLastWin] = useState(null)
   const [shake, setShake] = useState(false)
+  
 
   const [startTimer, setStartTimer] = useState(0);
 
@@ -124,17 +125,8 @@ export default function Game() {
           // lock/unlock bets based on backend status
           setBetsLocked(event.status !== "BETTING")
 
-          // if backend already provided the result, resolve here
-          if (event.status === "RESULT" && event.result) {
-            if (lastResolvedRoundRef.current !== event.id) {
-              resolveRound(event.id, event.result)
-              // resolveRound will set lastResolvedRoundRef after success
-            }
-          } else {
-            // clear result until backend pushes one
-            setResult(null)
-            setShowConfetti(false)
-          }
+          
+          
         } catch (err) {
           console.error("Failed parse event:", err)
         }
@@ -142,7 +134,7 @@ export default function Game() {
       client.subscribe(`/topic/status`, (message) => {
         try {
           const status = JSON.parse(message.body)
-          const result = "RED"
+          console.log(result,"#############################")
           console.log("📩 Status received:", status)
           
             
@@ -153,9 +145,10 @@ export default function Game() {
           setBetsLocked(status.status !== "BETTING")
 
           // if backend already provided the result, resolve here
-          if (status.status === "RESULT_WAIT" && result) {
+          if (status.status === "RESULT_WAIT" && status.result ) {
             if (lastResolvedRoundRef.current !== status.eventId) {
-              resolveRound(status.eventId, result)
+              setResult(status.result);
+              resolveRound(status.eventId,  result)
               // resolveRound will set lastResolvedRoundRef after success
             }
           } else {
@@ -171,11 +164,9 @@ export default function Game() {
     
     if(!currentEvent)
     {
-      console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAaaaaa");
       client.send("/app/join", {});
       client.subscribe(`/topic/players`, (message) => {
         try {
-          console.log("BBBBBBBBBBBBBBBBBBBBBBBB")
           const event = JSON.parse(message.body)
           console.log("📩 Event received:", event)
 
@@ -189,7 +180,7 @@ export default function Game() {
           // if backend already provided the result, resolve here
           if (event.status === "RESULT" && event.result) {
             if (lastResolvedRoundRef.current !== event.id) {
-              resolveRound(event.id, event.result)
+              resolveRound(event.id, result)
               // resolveRound will set lastResolvedRoundRef after success
             }
           } else {
@@ -328,6 +319,8 @@ export default function Game() {
   // --- resolve round when backend provides result ---
   function resolveRound(roundId, winningColor) {
     if (!winningColor) return
+
+    console.log(winningColor,"*******************************************************************")
     // avoid double-resolve
     if (lastResolvedRoundRef.current === roundId) return
 

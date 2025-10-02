@@ -12,5 +12,7 @@ public class StatusDto {
 
    private Long eventId;
 
+   private Color result;
+
     
 }

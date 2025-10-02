@@ -7,8 +7,10 @@ import com.color.dto.EventStatus;
 import com.color.dto.StatusDto;
 import com.color.entity.Bet;
 import com.color.entity.Event;
+import com.color.entity.User;
 import com.color.repository.BetRepository;
 import com.color.repository.EventRepository;
+import com.color.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -18,6 +20,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -34,6 +37,8 @@ public class SchedulerService {
     private Event currentEvent;
 
     private final BetRepository betRepository;
+
+    private final UserRepository userRepository;
 
 
 
@@ -94,7 +99,7 @@ public class SchedulerService {
         }
         // Result wait phase (10 sec after betting ends)
         else if (now.isBefore(currentEvent.getEndAt().plusSeconds(10))) {
-
+            resolveEvent(statusDto, currentEvent);
             currentEvent.setStatus(EventStatus.RESULT_WAIT);
             simpMessagingTemplate.convertAndSend("/topic/status", statusDto);
         }
@@ -107,33 +112,47 @@ public class SchedulerService {
     }
 
     // Calculate result
-    private void resolveEvent(Event event) {
-        if (event.getResult() != null) return;
+    private void resolveEvent(StatusDto statusDto, Event event) {
+        if (statusDto.getResult() != null) return;
 
-        Color winningColor = pickRandomColor();
-        event.setResult(winningColor);
-        event.setStatus(EventStatus.RESULT_WAIT);
+        Color winningColor = pickRandomColor(event);
+
+        statusDto.setResult(winningColor);
+;        BigDecimal multiplier = BigDecimal.valueOf(1.8);
+
 
         List<Bet> bets = betRepository.findByEvent(event);
         for (Bet b : bets) {
+            User user = b.getUser();
             if (b.getColor() == winningColor) {
+                BigDecimal payoutBD = BigDecimal.valueOf(b.getAmount()).multiply(multiplier);
                 b.setStatus(BetStatus.WON);
-                b.setPayout(b.getAmount() * 2);
+                b.setPayout(payoutBD.longValue());
+                user.setBalance(user.getBalance()+payoutBD.longValue());
             } else {
                 b.setStatus(BetStatus.LOST);
                 b.setPayout(0L);
             }
+            userRepository.save(user);
             betRepository.save(b);
         }
 
-        simpMessagingTemplate.convertAndSend("/topic/results", event);
+        simpMessagingTemplate.convertAndSend("/topic/status", statusDto);
         log.info("Event {} resolved. Winner: {}", event.getId(), winningColor);
     }
 
-    private Color pickRandomColor() {
-        Color[] colors = Color.values();
-        int idx = (int) (Math.random() * colors.length);
-        return colors[idx];
+    private Color pickRandomColor(Event event) {
+        Long green = event.getTotalGreen();
+        Long red = event.getTotalRed();
+        Long blue = event.getTotalBlue();
+
+        if (green <= red && green <= blue) {
+            return Color.GREEN;
+        } else if (red <= green && red <= blue) {
+            return Color.RED;
+        } else {
+            return Color.BLUE;
+        }
     }
 
 }

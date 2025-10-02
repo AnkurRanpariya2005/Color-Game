@@ -42,7 +42,8 @@ public class BetController {
             return;
         }
 
-        User user = userRepository.findById(1L).orElseThrow();
+        User user = userRepository.findById(request.getUserId()).orElseThrow();
+        user.setBalance(user.getBalance()-request.getAmount());
         Bet bet = Bet.builder()
                 .event(currentEvent)
                 .user(user)
@@ -51,6 +52,7 @@ public class BetController {
                 .status(BetStatus.PLACED)
                 .build();
         betRepository.save(bet);
+        userRepository.save(user);
 
         // Update totals
         switch (request.getColor()) {
