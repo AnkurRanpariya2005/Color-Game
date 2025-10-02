@@ -1,13 +1,18 @@
 "use client"
 
 import { useNavigate, Link } from "react-router-dom"
-import { useAuth } from "../context/AuthContext.jsx"
-import { useTheme } from "../context/ThemeContext.jsx"
 
+import { useTheme } from "../context/ThemeContext.jsx"
+import { useSelector } from "react-redux"
+import { userAction } from "../store/Event/user.js"
+import { useDispatch } from "react-redux"
+import { eventAction } from "../store/Event/event.js"
 export default function Header() {
-  const { user, balance, logout } = useAuth()
+  const user=useSelector((state=>state.user));
+  const dispatch=useDispatch();
   const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
+  console.log(user);
 
   return (
     <header className="app-header">
@@ -27,11 +32,11 @@ export default function Header() {
             {theme === "dark" ? "☀️" : "🌙"}
           </button>
 
-          {user ? (
+          {user.token ? (
             <>
               <button className="wallet-btn" onClick={() => navigate("/profile")} title="View wallet">
                 <span className="wallet-icon">💰</span>
-                <span className="wallet-amount">${balance.toFixed(2)}</span>
+                <span className="wallet-amount">${user.balance.toFixed(2)}</span>
               </button>
 
               <Link to="/bet-history" className="icon-btn" title="Bet History">
@@ -46,7 +51,15 @@ export default function Header() {
               </button>
               <button
                 className="btn"
-                onClick={logout}
+                onClick={() => {
+                  // Clear Redux store
+                  dispatch(userAction.clearUser())
+                  dispatch(eventAction.clearEvent())
+                  // Clear localStorage
+                  
+                  // Navigate to login
+                  navigate("/login");
+                }}
                 style={{ padding: "10px 16px", fontSize: "14px", minHeight: "auto" }}
               >
                 Logout

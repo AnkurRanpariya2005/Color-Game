@@ -1,21 +1,42 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
-
-const HISTORY_KEY = "cg_history_v1"
+import { useSelector, useDispatch } from "react-redux"
+import { eventAction } from "../store/Event/event.js"
+import { api } from "../config/Api.js"
 
 export default function EventHistory() {
-  const [history, setHistory] = useState(() => {
-    try {
-      const raw = localStorage.getItem(HISTORY_KEY)
-      if (raw) return JSON.parse(raw)
-    } catch {}
-    return []
-  })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const history = useSelector((state) => state.event.eventHistory)
+  const dispatch = useDispatch()
 
-  const colorCounts = history.reduce((acc, color) => {
-    acc[color] = (acc[color] || 0) + 1
+  useEffect(() => {
+    fetchEventHistory()
+  }, [])
+
+  const fetchEventHistory = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      const response = await api.get('/api/events/history')
+      if (response.data) {
+        dispatch(eventAction.setEventHistory(response.data))
+      }
+    } catch (err) {
+      console.error('Error fetching event history:', err)
+      setError('Failed to load event history')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const colorCounts = history.reduce((acc, event) => {
+    const color = typeof event === 'string' ? event : event.color || event.result
+    if (color) {
+      acc[color.toLowerCase()] = (acc[color.toLowerCase()] || 0) + 1
+    }
     return acc
   }, {})
 
@@ -33,10 +54,26 @@ export default function EventHistory() {
       <div className="card col" style={{ gap: 20 }}>
         <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
           <h1 style={{ margin: 0 }}>📊 Event History</h1>
-          <Link to="/" className="btn" style={{ textDecoration: "none" }}>
-            Back to Game
-          </Link>
+          <div className="row" style={{ gap: 8 }}>
+            <button 
+              className="btn" 
+              onClick={fetchEventHistory} 
+              disabled={loading}
+              style={{ textDecoration: "none" }}
+            >
+              {loading ? 'Loading...' : 'Refresh'}
+            </button>
+            <Link to="/" className="btn" style={{ textDecoration: "none" }}>
+              Back to Game
+            </Link>
+          </div>
         </div>
+
+        {error && (
+          <div className="pill" style={{ color: 'var(--danger)' }}>
+            {error}
+          </div>
+        )}
 
         <div className="stats-grid">
           <div className="stat-card">
@@ -96,15 +133,19 @@ export default function EventHistory() {
           </div>
         ) : (
           <div className="history-grid">
-            {history.map((color, idx) => (
-              <div key={idx} className={`history-item ${color}`}>
-                <div className="history-number">#{history.length - idx}</div>
-                <div className={`history-color ${color}`}>
-                  {color === "red" ? "🔴" : color === "green" ? "🟢" : "🔵"}
+            {history.map((event, idx) => {
+              const color = typeof event === 'string' ? event : event.color || event.result
+              const colorLower = color?.toLowerCase()
+              return (
+                <div key={idx} className={`history-item ${colorLower}`}>
+                  <div className="history-number">#{history.length - idx}</div>
+                  <div className={`history-color ${colorLower}`}>
+                    {colorLower === "red" ? "🔴" : colorLower === "green" ? "🟢" : "🔵"}
+                  </div>
+                  <div className="history-label">{color?.toUpperCase()}</div>
                 </div>
-                <div className="history-label">{color.toUpperCase()}</div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>

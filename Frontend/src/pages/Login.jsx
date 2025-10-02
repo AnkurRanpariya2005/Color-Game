@@ -1,20 +1,22 @@
-import { useEffect, useState } from 'react'
+import {  useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext.jsx'
+import { useDispatch } from 'react-redux'
+import { userAction } from '../store/Event/user.js'
+
+import { API_BASE_URL } from '../config/Api.js'
+import axios from 'axios'
 
 export default function Login() {
-  const { login } = useAuth()
+  const dispatch = useDispatch();
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+ 
 
-  useEffect(() => {
-    const saved = localStorage.getItem('cg_last_email')
-    if (saved) setEmail(saved)
-  }, [])
+  
 
   const onSubmit = async (e) => {
     e.preventDefault()
@@ -28,9 +30,18 @@ export default function Login() {
       if (password.length < 6) {
         throw new Error('Password must be at least 6 characters')
       }
-      await login(emailTrimmed, password)
-      localStorage.setItem('cg_last_email', emailTrimmed)
-      navigate('/')
+      
+      const res=await axios.post(`${API_BASE_URL}/api/user/login`,{email:emailTrimmed,password:password});
+      console.log(res.data);
+      if(res.data.message=="Login Successful" )
+      {
+        dispatch(userAction.storeUser({useName:res.data.email,email:res.data.email,token:res.data.token,balance:res.data.balance }));
+        navigate('/')
+      }else{
+        alert("Invalid Credentials");
+        navigate("/login");
+      }
+
     } catch (err) {
       setError(err.message || 'Login failed')
     } finally {

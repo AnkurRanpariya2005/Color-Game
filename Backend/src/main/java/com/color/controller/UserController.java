@@ -2,6 +2,8 @@ package com.color.controller;
 
 import java.util.List;
 
+import com.color.dto.RegisterReq;
+import com.color.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,20 +25,26 @@ public class UserController {
     
     @Autowired
     private UserService userService;
+    @Autowired
+    private UserRepository userRepository;
 
     @PostMapping("/register")
-    public AuthResponse registerUser(@RequestBody User user) throws Exception {
+    public AuthResponse registerUser(@RequestBody RegisterReq user) throws Exception {
 
         String token = userService.registerUser(user);
-        AuthResponse response = new AuthResponse(token, "Registration successful");
+        AuthResponse response = new AuthResponse(user.getEmail(),0L,token, "Registration successful");
         return response;
     }
     
     @PostMapping("/login")
-    public AuthResponse loginUser(@RequestBody User user) {
+    public AuthResponse loginUser(@RequestBody RegisterReq user) {
         String token = userService.verify(user);
-        AuthResponse response = new AuthResponse(token, "Login successful");
-        return response;
+        if(!token.equals("fail"))
+        {
+            User user1=userRepository.findByEmail(user.getEmail());
+            return new AuthResponse(user.getEmail(),user1.getBalance(),token,"Login Successful");
+        }
+        return new AuthResponse(user.getEmail(),0L,token,"Try Again");
     }
 
     @GetMapping("/get/{id}")

@@ -3,6 +3,7 @@ package com.color.service;
 import java.util.List;
 import java.util.Optional;
 
+import com.color.dto.RegisterReq;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -30,7 +31,7 @@ public class UserService {
 
     private BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
     
-    public String registerUser(User user) throws Exception {
+    public String registerUser(RegisterReq user) throws Exception {
 
         User oldUser = userRepository.findByEmail(user.getEmail());
         
@@ -52,10 +53,11 @@ public class UserService {
         
     }
 
-    public String verify(User user) {
-        
+    public String verify(RegisterReq user) {
+
         Authentication authentication = authManager.authenticate(new UsernamePasswordAuthenticationToken(user.getEmail(), user.getPassword()));
         if (authentication.isAuthenticated()) {
+
             return jwtService.generateToken(user.getEmail());
         } else {
             return "fail";

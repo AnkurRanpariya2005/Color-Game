@@ -1,12 +1,39 @@
 "use client"
 
-import { useAuth } from "../context/AuthContext.jsx"
+import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
+import { useSelector, useDispatch } from "react-redux"
+import { eventAction } from "../store/Event/event.js"
+import { api } from "../config/Api.js"
 
 export default function BetHistory() {
-  const { user, betHistory } = useAuth()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const user = useSelector((state) => state.user)
+  const betHistory = useSelector((state) => state.event.betHistory)
+  const dispatch = useDispatch()
 
-  if (!user) {
+  useEffect(() => {
+    fetchBetHistory()
+  }, [])
+
+  const fetchBetHistory = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      const response = await api.get('/api/bets/history')
+      if (response.data) {
+        dispatch(eventAction.setBetHistory(response.data))
+      }
+    } catch (err) {
+      console.error('Error fetching bet history:', err)
+      setError('Failed to load bet history')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (!user.token || !user.email) {
     return (
       <div className="page-container">
         <div className="card col" style={{ textAlign: "center", gap: 20 }}>
@@ -33,10 +60,26 @@ export default function BetHistory() {
       <div className="card col" style={{ gap: 20 }}>
         <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
           <h1 style={{ margin: 0 }}>📜 Your Bet History</h1>
-          <Link to="/" className="btn" style={{ textDecoration: "none" }}>
-            Back to Game
-          </Link>
+          <div className="row" style={{ gap: 8 }}>
+            <button 
+              className="btn" 
+              onClick={fetchBetHistory} 
+              disabled={loading}
+              style={{ textDecoration: "none" }}
+            >
+              {loading ? 'Loading...' : 'Refresh'}
+            </button>
+            <Link to="/" className="btn" style={{ textDecoration: "none" }}>
+              Back to Game
+            </Link>
+          </div>
         </div>
+
+        {error && (
+          <div className="pill" style={{ color: 'var(--danger)' }}>
+            {error}
+          </div>
+        )}
 
         <div className="stats-grid">
           <div className="stat-card">

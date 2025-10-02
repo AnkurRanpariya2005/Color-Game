@@ -2,7 +2,7 @@
 
 import "./App.css"
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
-import { AuthProvider, useAuth } from "./context/AuthContext.jsx"
+
 import { ThemeProvider } from "./context/ThemeContext.jsx"
 import Header from "./components/Header.jsx"
 import Login from "./pages/Login.jsx"
@@ -11,9 +11,11 @@ import Game from "./pages/Game.jsx"
 import Profile from "./pages/Profile.jsx"
 import BetHistory from "./pages/BetHistory.jsx"
 import EventHistory from "./pages/EventHistory.jsx"
+import { useSelector } from "react-redux"
 
 function ProtectedRoute({ children }) {
-  const { user } = useAuth()
+  const user=useSelector((state)=>state.user);
+  console.log(user);
   if (!user) {
     return <Navigate to="/login" replace />
   }
@@ -23,11 +25,11 @@ function ProtectedRoute({ children }) {
 function App() {
   return (
     <ThemeProvider>
-      <AuthProvider>
+     
         <BrowserRouter>
-          <div className="app-container">
-            <Header />
-            <main className="app-main">
+        <div className="app-container">
+          <Header />
+          <main className="app-main">
               <Routes>
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
@@ -69,7 +71,7 @@ function App() {
             </main>
           </div>
         </BrowserRouter>
-      </AuthProvider>
+      
     </ThemeProvider>
   )
 }

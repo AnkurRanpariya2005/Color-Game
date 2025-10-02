@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { useAuth } from "../context/AuthContext.jsx"
+
 import SockJS from "sockjs-client"
 import { Stomp } from "@stomp/stompjs"
 
@@ -61,7 +61,8 @@ function parseServerTimeToMs(isoString) {
 }
 
 export default function Game() {
-  const { user, balance, setBalance, updateProfile, addBetToHistory, betHistory } = useAuth()
+  const {user}=useSelector((state)=>state.user);
+  
   const dispatch = useDispatch()
   const curre = useSelector((state) => state.event.Event)
   console.log(curre,"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAaaaaa")
@@ -87,7 +88,9 @@ export default function Game() {
     try {
       const raw = localStorage.getItem(HISTORY_KEY)
       if (raw) return JSON.parse(raw)
-    } catch {}
+    } catch {
+      // ignore
+      }
     return []
   })
 
@@ -207,7 +210,9 @@ export default function Game() {
     return () => {
       try {
         if (client && client.connected) client.disconnect()
-      } catch (e) {}
+      } catch (e) {
+        console.warn("Error during WebSocket disconnect:", e)
+    }
     }
     // only run once
   }, [])
@@ -240,7 +245,7 @@ export default function Game() {
 
       // if we're before start, show time to start; otherwise show time to end
       const isBeforeStart = now < startMs
-      const remaining = Math.max(0, Math.ceil((isBeforeStart ? startMs : endMs) - now) / 1000)
+      // const remaining = Math.max(0, Math.ceil((isBeforeStart ? startMs : endMs) - now) / 1000)
       // We want integer seconds
       const remainingSeconds = Math.max(0, Math.ceil((isBeforeStart ? (startMs - now) : (endMs - now)) / 1000))
       setRemainingTime(remainingSeconds)
@@ -331,24 +336,13 @@ export default function Game() {
 
     if (pendingBet && pendingBet.roundId === roundId) {
       const won = pendingBet.color === winningColor
-      const payout = won ? pendingBet.amount * 2 : 0
+      // const payout = won ? pendingBet.amount * 2 : 0
 
-      if (user) {
-        addBetToHistory({
-          roundId,
-          timestamp: Date.now(),
-          betColor: pendingBet.color,
-          betAmount: pendingBet.amount,
-          result: winningColor,
-          won,
-          payout,
-        })
-      }
+     
 
       if (won) {
-        const next = balance + payout
-        setBalance(next)
-        updateProfile({ balance: next })
+        
+       
         setShowConfetti(true)
         setLastWin(winningColor)
         if (navigator.vibrate) navigator.vibrate([50, 30, 50, 30, 50])
@@ -460,7 +454,7 @@ export default function Game() {
           </div>
           <button
             className={`btn confirm-btn ${pendingBet ? "confirmed" : ""}`}
-            disabled={betsLocked || !selected || betAmount > balance}
+            disabled={betsLocked || !selected || betAmount > user.balance}
             onClick={confirmBet}
             style={{ width: "100%" }}
           >
@@ -488,9 +482,7 @@ export default function Game() {
         <div className="card">
           <div className="row" style={{ justifyContent: "space-between", marginBottom: 4 }}>
             <h3 style={{ margin: 0, fontSize: "20px", fontWeight: 700 }}>📜 Your Bet History</h3>
-            <button className="btn clear-btn" onClick={() => updateProfile({ betHistory: [] })} style={{ padding: "8px 16px", fontSize: "14px" }}>
-              Clear
-            </button>
+         
           </div>
           <div style={{ overflowX: "auto" }}>
             <table className="bet-history-table">
@@ -505,24 +497,7 @@ export default function Game() {
                 </tr>
               </thead>
               <tbody>
-                {betHistory.slice(0, 20).map((bet, idx) => (
-                  <tr key={idx} className={bet.won ? "win-row" : "loss-row"}>
-                    <td>{new Date(bet.timestamp).toLocaleTimeString()}</td>
-                    <td>
-                      <span className="color-indicator" style={{ background: bet.betColor === "red" ? "#ef4444" : bet.betColor === "green" ? "#10b981" : "#3b82f6" }}></span>
-                      {bet.betColor.toUpperCase()}
-                    </td>
-                    <td>${bet.betAmount}</td>
-                    <td>
-                      <span className="color-indicator" style={{ background: bet.result === "red" ? "#ef4444" : bet.result === "green" ? "#10b981" : "#3b82f6" }}></span>
-                      {bet.result.toUpperCase()}
-                    </td>
-                    <td>
-                      <span className={`bet-result ${bet.won ? "win" : "loss"}`}>{bet.won ? "✓ WIN" : "✗ LOSS"}</span>
-                    </td>
-                    <td className={`payout ${bet.won ? "win" : "loss"}`}>{bet.won ? `+$${bet.payout}` : `-$${bet.betAmount}`}</td>
-                  </tr>
-                ))}
+                
               </tbody>
             </table>
           </div>

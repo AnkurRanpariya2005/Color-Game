@@ -1,9 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext.jsx'
+import { useDispatch } from 'react-redux'
+import { userAction } from '../store/Event/user.js'
+import axios from 'axios'
+import { API_BASE_URL } from '../config/Api.js' 
+
 
 export default function Register() {
-  const { register } = useAuth()
+  
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
@@ -11,11 +15,12 @@ export default function Register() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+  const dispatch = useDispatch();
 
-  useEffect(() => {
-    const saved = localStorage.getItem('cg_last_email')
-    if (saved) setEmail(saved)
-  }, [])
+  // useEffect(() => {
+  //   const saved = localStorage.getItem('cg_last_email')
+  //   if (saved) setEmail(saved)
+  // }, [])
 
   const onSubmit = async (e) => {
     e.preventDefault()
@@ -32,9 +37,17 @@ export default function Register() {
       if (password !== confirm) {
         throw new Error('Passwords do not match')
       }
-      await register(emailTrimmed, password)
-      localStorage.setItem('cg_last_email', emailTrimmed)
-      navigate('/')
+    
+      const res=await axios.post(`${API_BASE_URL}/api/user/register`,{email:emailTrimmed,password:password});
+      console.log(res.data);
+      if(res.data.message=="Registration successful" && res.data.token!="User already exist")
+      {
+        dispatch(userAction.storeUser({useName:res.data.email,email:res.data.email,token:res.data.token,balance:res.data.balance }));
+        navigate('/');
+      }else{
+        alert("User already exist");
+        navigate("/register");
+      }
     } catch (err) {
       setError(err.message || 'Register failed')
     } finally {
