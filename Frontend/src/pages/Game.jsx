@@ -11,9 +11,9 @@ import { useDispatch } from "react-redux"
 const HISTORY_KEY = "cg_history_v1"
 
 const COLORS = [
-  { key: "red", label: "Red", className: "red", multiplier: 2 },
-  { key: "green", label: "Green", className: "green", multiplier: 2 },
-  { key: "blue", label: "Blue", className: "blue", multiplier: 2 },
+  { key: "RED", label: "Red", className: "red", multiplier: 2 },
+  { key: "GREEN", label: "Green", className: "green", multiplier: 2 },
+  { key: "BLUE", label: "Blue", className: "blue", multiplier: 2 },
 ]
 
 function Confetti({ color }) {
@@ -200,6 +200,7 @@ export default function Game() {
       })
     
     }
+    
   })
 
 
@@ -274,50 +275,50 @@ export default function Game() {
   }, [currentEvent])
 
   // --- place / confirm bets ---
-  function placeBet(colorKey) {
-    if (betsLocked) return
-    setSelected(colorKey)
-    if (navigator.vibrate) navigator.vibrate(10)
-  }
+  // function placeBet(colorKey) {
+  //   if (betsLocked) return
+  //   setSelected(colorKey)
+  //   if (navigator.vibrate) navigator.vibrate(10)
+  // }
 
-  function confirmBet() {
-    if (betsLocked || !selected || !currentEvent) return
-    if (pendingBet && pendingBet.roundId === currentEvent.id) return
-    if (betAmount <= 0 || betAmount > balance) return
+  // function confirmBet() {
+  //   if (betsLocked || !selected || !currentEvent) return
+  //   if (pendingBet && pendingBet.roundId === currentEvent.id) return
+  //   if (betAmount <= 0 || betAmount > balance) return
 
-    // local optimistic balance update
-    const nextBalance = balance - betAmount
-    setBalance(nextBalance)
-    updateProfile({ balance: nextBalance })
+  //   // local optimistic balance update
+  //   const nextBalance = balance - betAmount
+  //   setBalance(nextBalance)
+  //   updateProfile({ balance: nextBalance })
 
-    const pb = { roundId: currentEvent.id, color: selected, amount: betAmount }
-    setPendingBet(pb)
-    if (navigator.vibrate) navigator.vibrate([20, 10, 20])
+  //   const pb = { roundId: currentEvent.id, color: selected, amount: betAmount }
+  //   setPendingBet(pb)
+  //   if (navigator.vibrate) navigator.vibrate([20, 10, 20])
 
-    // send to backend (safe: supports either client.publish or client.send)
-    try {
-      const client = stompRef.current
-      const payload = {
-        eventId: currentEvent.id,
-        color: selected,
-        amount: betAmount,
-        userId: user?.id || "guest",
-      }
+  //   // send to backend (safe: supports either client.publish or client.send)
+  //   try {
+  //     const client = stompRef.current
+  //     const payload = {
+  //       eventId: currentEvent.id,
+  //       color: selected,
+  //       amount: betAmount,
+  //       userId: user?.id || "guest",
+  //     }
 
-      if (client) {
-        // new Client style uses publish; old "Stomp.over" style uses send
-        if (typeof client.publish === "function") {
-          client.publish({ destination: "/app/bet", body: JSON.stringify(payload) })
-        } else if (typeof client.send === "function") {
-          client.send("/app/bet", {}, JSON.stringify(payload))
-        } else {
-          console.warn("STOMP client has no send/publish method")
-        }
-      }
-    } catch (e) {
-      console.warn("Failed to send bet to backend:", e)
-    }
-  }
+  //     if (client) {
+  //       // new Client style uses publish; old "Stomp.over" style uses send
+  //       if (typeof client.publish === "function") {
+  //         client.publish({ destination: "/app/bet", body: JSON.stringify(payload) })
+  //       } else if (typeof client.send === "function") {
+  //         client.send("/app/bet", {}, JSON.stringify(payload))
+  //       } else {
+  //         console.warn("STOMP client has no send/publish method")
+  //       }
+  //     }
+  //   } catch (e) {
+  //     console.warn("Failed to send bet to backend:", e)
+  //   }
+  // }
 
   // --- resolve round when backend provides result ---
   function resolveRound(roundId, winningColor) {
@@ -376,6 +377,20 @@ export default function Game() {
         : "🎲 Result (waiting...)"
       : currentEvent.status
     : "Waiting for event"
+
+// added later by ankur
+  const placeBet = (color) => setSelected(color)
+  const confirmBet = () => {
+    console.log("Confirm bet clicked, hahahahhahahahahahhahah");
+    const client = stompRef.current
+    if (!selected || !currentEvent) return
+    client.send(
+      "/app/bet",
+      {},
+      JSON.stringify({ userId: 1, eventId: currentEvent.id, color: selected, amount: betAmount })
+    )
+    setSelected(null)
+  }
 
   return (
     <div className={`game-wrap ${shake ? "shake" : ""}`}>

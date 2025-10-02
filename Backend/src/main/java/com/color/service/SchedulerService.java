@@ -1,9 +1,13 @@
 package com.color.service;
 
 import com.color.controller.WebSocketContoller;
+import com.color.dto.BetStatus;
+import com.color.dto.Color;
 import com.color.dto.EventStatus;
 import com.color.dto.StatusDto;
+import com.color.entity.Bet;
 import com.color.entity.Event;
+import com.color.repository.BetRepository;
 import com.color.repository.EventRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +19,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -27,6 +32,8 @@ public class SchedulerService {
     private final SimpMessagingTemplate simpMessagingTemplate;
 
     private Event currentEvent;
+
+    private final BetRepository betRepository;
 
 
 
@@ -98,4 +105,35 @@ public class SchedulerService {
         }
         eventRepository.save(currentEvent);
     }
+
+    // Calculate result
+    private void resolveEvent(Event event) {
+        if (event.getResult() != null) return;
+
+        Color winningColor = pickRandomColor();
+        event.setResult(winningColor);
+        event.setStatus(EventStatus.RESULT_WAIT);
+
+        List<Bet> bets = betRepository.findByEvent(event);
+        for (Bet b : bets) {
+            if (b.getColor() == winningColor) {
+                b.setStatus(BetStatus.WON);
+                b.setPayout(b.getAmount() * 2);
+            } else {
+                b.setStatus(BetStatus.LOST);
+                b.setPayout(0L);
+            }
+            betRepository.save(b);
+        }
+
+        simpMessagingTemplate.convertAndSend("/topic/results", event);
+        log.info("Event {} resolved. Winner: {}", event.getId(), winningColor);
+    }
+
+    private Color pickRandomColor() {
+        Color[] colors = Color.values();
+        int idx = (int) (Math.random() * colors.length);
+        return colors[idx];
+    }
+
 }
